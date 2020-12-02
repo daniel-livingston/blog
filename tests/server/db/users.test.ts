@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { Pool } from "pg";
 import { v4 as uuidv4 } from "uuid";
-import User from "../../../../../src/server/db/users";
-import { InvalidUsernameError } from "../../../../../src/server/db/errors";
+import User from "../../../src/server/db/users";
+import { InvalidUsernameError } from "../../../src/server/db/errors";
 
 const userOneId = uuidv4();
 const userOneUsername = "userOne";
