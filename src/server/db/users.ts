@@ -3,7 +3,7 @@ import PasswordValidator from "password-validator";
 import { QueryResult } from "pg";
 import { v4 as uuidv4 } from "uuid";
 import validator from "validator";
-import { UserConfig, UserCredentials, UserDetails, UserSearchOptions } from "../types";
+import { UserConfig, UserCredentials, UserDetails } from "../types";
 import {
 	InvalidPasswordError,
 	InvalidInputError,
@@ -33,6 +33,15 @@ class User {
 		this.username = user.username;
 		this.hash = user.hash;
 		this.created_at = user.created_at;
+	}
+
+	/**
+	 * Validates the user password in order for the user to be authenticated.
+	 * @param {string} password - The password to be validated for authentication
+	 */
+	async validPassword(password: string): Promise<boolean> {
+		const isValid = await bcrypt.compare(password, this.hash);
+		return isValid;
 	}
 
 	toJSON() {

@@ -1,50 +1,60 @@
-import express from "express";
+import { Router } from "express";
+import passport from "passport";
 import User from "../db/users";
 
-const router = express.Router();
+const router = Router();
 
-router.get("/", async (req, res) => {
-	if (!req.body.username) {
-		return res.status(400).send();
+/**
+ * Logs a user into a session.
+ */
+router.post("/login", passport.authenticate("local"), (req, res) => {
+	res.redirect("/users/" + req.user.username);
+});
+
+/**
+ * Logs a user out of a session.
+ */
+router.post("/logout", (req, res) => {
+	req.logout();
+	res.redirect("/");
+});
+
+/**
+ * Gets the logged in user's profile.
+ */
+router.get("/me", async (req, res) => {
+	if (!req.user) {
+		return res.status(401).send();
 	}
-	try {
-		const user = await User.findByUsername(req.body.username);
-		if (!user) {
-			return res.status(404).send();
-		}
 
+	try {
+		const user = await User.findById(req.user.id);
 		res.send(user);
-	} catch (error) {
+	} catch (e) {
 		res.status(500).send();
 	}
 });
 
-router.get("/:id", async (req, res) => {
-	console.log(req.params.id);
+/**
+ * Registers a user into the database and logs the user into a session.
+ */
+router.post("/register", async (req, res) => {
 	try {
-		const user = await User.findById(req.params.id);
-		if (!user) {
-			return res.status(404).send();
-		}
-
-		res.send(user);
-	} catch (error) {
-		res.status(400).send({ error });
-	}
-});
-
-router.post("/", async (req, res) => {
-	try {
-		const user = await User.register(
-			{ username: req.body.username, password: req.body.password },
-			{}
-		);
+		const { username, password } = req.body;
+		const user = await User.register({ username, password }, {});
 		if (!user) {
 			return res.status(400).send();
 		}
-		res.send(user);
-	} catch (error) {
-		res.status(400).send({ error });
+
+		req.login(user, (e) => {
+			if (e) {
+				return res.status(500).send();
+			}
+
+			res.send(user);
+		});
+	} catch (e) {
+		res.status(400).send(e);
 	}
 });
 
